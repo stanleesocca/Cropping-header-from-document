@@ -1,0 +1,75 @@
+
+# required packages for the work. 
+
+pkgs <- c("magick", "pdftools")
+
+## check to see if installed packages is available.
+
+if(length(setdiff(pkgs, rownames(installed.packages()))) > 0){
+  install.packages(setdiff(pkgs, rownames(installed.packages())))
+}
+
+# load packages 
+lapply(pkgs, require, character.only=TRUE)
+
+
+
+## Make sure to place all the files in one directory
+
+## function to read in the files 
+
+load_file_type <- function(file){
+  if(all(grepl(".pdf$", files))){
+    image_container <- lapply(files, image_read_pdf)
+  } else if(all(grepl(".pdf$", files))){
+    image_container <- lapply(files, image_read)
+  }
+}
+
+
+img <- load_file_type(files)
+
+
+# function to crop out the upper part of the document relative to the size of the document.
+
+scaled_factor <- function(x, scaling=20){
+  
+  if(is.null(scaling)) stop("Please give the scale factor to edit")
+
+  # cut 10% of the image 
+  
+  height <- image_info(x)["height"]
+  width <- image_info(x)["width"]
+  maxheight <- max(height)
+  maxwidth <- max(width)
+  
+  
+  heights <- (image_info(x)["height"]*scaling)/100
+  
+  
+  # get the max of the height
+  ymax <- max(heights)
+  
+  # crop the max height from the image object
+  geom <- paste0(maxwidth,"x", maxheight,"+0", -ymax)
+  new_image <- image_crop(x, geometry = geom)
+  return(new_image)
+}
+
+## test for one will work. 
+
+w <- scaled_factor(image_container[[1]], scaling = 14)
+
+# View the cropped document
+image_browse(w)  
+
+
+# For all the document in img:
+crop_images <- lapply(img, scaled_factor, scaling = 14)
+
+# View the cropped document
+lapply(crop_images, image_browse)  
+
+
+
+
